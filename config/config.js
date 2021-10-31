@@ -4,11 +4,11 @@ const { DB_HOST, DB_USERNAME, DB_PASSWORD } = process.env;
 
 module.exports = {
   "development": {
-    "username": DB_USERNAME,
-    "password": DB_PASSWORD,
-    "database": "database_development",
-    "host": DB_HOST,
-    "dialect": "postgres",
+    "username": "atnlzqgieewiwt",
+    "password": "9ad719ed579b458470ab2abd76384895a7beeabafc0b37841ac70e847aba3f1a",
+    "database": "dcb1r238t6df6i",
+    "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
+    "dialect": "postgres"
   },
   "test": {
     "username": DB_USERNAME,
