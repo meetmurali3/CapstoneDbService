@@ -3,7 +3,7 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const bodyParser = require('body-parser')
 const app = express()
-const { Pool } = require('pg');
+
 require('dotenv').config();
 const db = require("./models");
 db.sequelize.sync();
@@ -30,18 +30,6 @@ const insuredAcct = db.InsuredAccount;
 const insuredAddress = db.address;
 const vehicle = db.Vehicle;
 const coverage = db.Coverage;
-
-const client = new Pool(
-  {
-    user: process.env.DB_USERNAME,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
-  }
-);
-client.connect();
-
 
 
 /**
