@@ -8,7 +8,10 @@ module.exports = {
     "password": "9ad719ed579b458470ab2abd76384895a7beeabafc0b37841ac70e847aba3f1a",
     "database": "dcb1r238t6df6i",
     "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": true
+    }
   },
   "test": {
     "username": DB_USERNAME,
@@ -22,6 +25,9 @@ module.exports = {
     "password": "9ad719ed579b458470ab2abd76384895a7beeabafc0b37841ac70e847aba3f1a",
     "database": "dcb1r238t6df6i",
     "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": true
+    }
   }
 }
