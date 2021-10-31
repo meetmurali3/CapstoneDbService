@@ -10,7 +10,7 @@ module.exports = {
     "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
     "dialect": "postgres",
     "dialectOptions": {
-      "ssl": true
+      "ssl": {require:true,rejectUnauthorized: false}
     }
   },
   "test": {
@@ -27,7 +27,7 @@ module.exports = {
     "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
     "dialect": "postgres",
     "dialectOptions": {
-      "ssl": true
+      "ssl": {require:true,rejectUnauthorized: false}
     }
   }
 }
