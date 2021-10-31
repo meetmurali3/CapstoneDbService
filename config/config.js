@@ -18,10 +18,10 @@ module.exports = {
     "dialect": "postgres"
   },
   "production": {
-    "username": "ycezkhfbrcjkcm",
-    "password": "0e5ace75cbb4d5f807e862dd3656caa7145534ff44b08d1a9cca60464d7bced2",
-    "database": "df7ianoa8v1esc",
-    "host": "ec2-35-171-41-147.compute-1.amazonaws.com",
+    "username": "atnlzqgieewiwt",
+    "password": "9ad719ed579b458470ab2abd76384895a7beeabafc0b37841ac70e847aba3f1a",
+    "database": "dcb1r238t6df6i",
+    "host": "ec2-35-169-103-164.compute-1.amazonaws.com",
     "dialect": "postgres"
   }
 }
