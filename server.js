@@ -3,7 +3,6 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const bodyParser = require('body-parser')
 const app = express()
-
 require('dotenv').config();
 const db = require("./models");
 db.sequelize.sync();
@@ -12,6 +11,7 @@ var methodOverride = require('method-override');
 var cors = require('cors');
 const address = require('./models/address');
 const { request } = require('express');
+
 app.use(bodyParser.urlencoded({ 'extended': 'true' }));
 app.use(bodyParser.json());
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
@@ -30,6 +30,7 @@ const insuredAcct = db.InsuredAccount;
 const insuredAddress = db.address;
 const vehicle = db.Vehicle;
 const coverage = db.Coverage;
+
 
 
 /**
@@ -245,7 +246,7 @@ app.get('/api/insured/:id', function (req, res) {
 //Insured Account related endpoints
 // Get all Insured Accounts
 app.get('/api/insuredinfo', function (req, res) {
-  insuredAcct.findAll({})
+  insuredAcct.findAll({include: [{ model: insuredAddress }]})
     .then(data => {
       res.send(data);
     })
