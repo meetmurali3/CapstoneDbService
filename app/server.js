@@ -1,4 +1,3 @@
-// Set up 
 const express = require('express')
 const bcrypt = require('bcrypt')
 const bodyParser = require('body-parser')
@@ -16,7 +15,6 @@ app.use(bodyParser.urlencoded({ 'extended': 'true' }));
 app.use(bodyParser.json());
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
 app.use(cors());
-
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header('Access-Control-Allow-Methods', 'DELETE, POST, PUT');
@@ -32,9 +30,10 @@ const vehicle = db.Vehicle;
 const coverage = db.Coverage;
 
 
-
+/**********************************Insured related endpoints ***************************************/
 /**
- *  creates insured Accounts
+ *  creates insured Account record
+ *  during the process it inserts record in address table
  */
 app.post('/api/insuredinfo', function (req, res) {
   if (!req.body.firstName) {
@@ -85,7 +84,40 @@ app.post('/api/insuredinfo', function (req, res) {
 });
 
 /**
- * created policy along with vehicles and coverages
+ * This returns the insured record for a given insured primary key. 
+ * This is used on the Home page
+ */
+ app.get('/api/insured/:id', function (req, res) {
+  insuredAcct.findByPk(req.params.id).then(data => {
+    res.send(data);
+  }).catch(err => {
+    res.status(500).send({
+      message:
+        err.message || "An error occurred while retrieving accounts."
+    });
+  });
+});
+
+/**
+ * This returns all of the insureds records, returns along with the address information
+ * This is used on the Home page
+ */
+app.get('/api/insuredinfo', function (req, res) {
+  insuredAcct.findAll({ include: [{ model: insuredAddress }] })
+    .then(data => {
+      res.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "An error occurred while retrieving accounts."
+      });
+    });
+});
+
+/**********************************Policy related endpoints ***************************************/
+/**
+ * creates policy along with vehicles and coverages
  */
 app.post('/api/newpolicy', function (req, res) {
   if (!req.body.policyNumber) {
@@ -98,7 +130,6 @@ app.post('/api/newpolicy', function (req, res) {
   console.log(req.body.insuredAccount);
   console.log("received username ", req.body.uID);
 
-  // Create an account
   const autoPolicyDet = {
     policyNumber: req.body.policyNumber,
     policyStart: req.body.policyStart,
@@ -111,7 +142,7 @@ app.post('/api/newpolicy', function (req, res) {
     UserId: req.body.uID
   };
 
-  // Save policy in the database
+  // Save policy in the database along with Vehicle and Coverage table record insertions
   var policy = autoPolicies.create(autoPolicyDet).then(function (policy) {
     policy.createVehicle({
       year: req.body.year,
@@ -139,7 +170,9 @@ app.post('/api/newpolicy', function (req, res) {
     });
 });
 
-//set UW decision
+/**
+ *  Sets the underwriting status of a policy
+ */
 app.patch('/api/uwapproval', function (req, res) {
   console.log("aaa", req.body.id);
   console.log("bbb", req.body.isUWApprovedInd);
@@ -158,13 +191,16 @@ app.patch('/api/uwapproval', function (req, res) {
   });
 });
 
-//Policies that require UW approval and are not yet approved or rejected
+/**
+ *  Returns policies that require UW approval and are not yet approved or rejected
+ */
 app.get('/api/uwapproval', function (req, res) {
   autoPolicies.findAll({
     where: {
       requireUWApprovalInd: { [Op.eq]: true },
       isUWApprovedInd: { [Op.is]: null }
-    }
+    },
+    include: [{ model: vehicle }]
   }).then(data => {
     res.send(data);
   }).catch(err => {
@@ -176,7 +212,10 @@ app.get('/api/uwapproval', function (req, res) {
 });
 
 
-//Policy list by user
+/**
+ *  Returns the list of policies created by the user passed in the request
+ *  this includes vehile and coverage records
+ */
 app.get('/api/policy/:id', function (req, res) {
   autoPolicies.findAll({
     where: { UserId: { [Op.eq]: req.params.id } },
@@ -191,10 +230,11 @@ app.get('/api/policy/:id', function (req, res) {
   });
 });
 
+/**********************************login endpoint ***************************************/
 /**
- * This is the login authentication service
+ * This does the login authentication. 
  */
- app.post('/auth/login', function (req, res) {
+app.post('/auth/login', function (req, res) {
   usersOfApp.findOne({
     where: {
       userName: { [Op.eq]: req.body.login },
@@ -206,95 +246,15 @@ app.get('/api/policy/:id', function (req, res) {
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "An error occurred while creating the Insured Account."
+          err.message || "User is not authenticated."
       });
     });
 });
 
-
-//Insured Account related endpoints
-// Get all Insured Accounts
-app.get('/api/insuredinfo/:id', function (req, res) {
-  console.log("id to retrive " + id);
-  const pid = req.params.id;
-  insuredAcct.findByPk(pid)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "An error occurred while retrieving accounts."
-      });
-    });
-});
-
-
-
-//insured 
-app.get('/api/insured/:id', function (req, res) {
-  insuredAcct.findByPk(req.params.id).then(data => {
-    res.send(data);
-  }).catch(err => {
-    res.status(500).send({
-      message:
-        err.message || "An error occurred while retrieving accounts."
-    });
-  });
-});
-
-//Insured Account related endpoints
-// Get all Insured Accounts
-app.get('/api/insuredinfo', function (req, res) {
-  insuredAcct.findAll({include: [{ model: insuredAddress }]})
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "An error occurred while retrieving accounts."
-      });
-    });
-});
-
-app.put('/api/insuredinfo/:id', function (req, res) {
-  if (!req.body.firstName) {
-    res.status(400).send({
-      message: "Some required fields are missing in the data, please verify"
-    });
-    return;
-  }
-
-  // Create an account
-  const insAcc = {
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    gender: req.body.gender,
-    dob: req.body.dob
-  };
-  var where = {
-    where: { id: req.params.id }
-  };
-  // Save account in the database
-  insuredAcct.update(insAcc, where)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "An error occurred while creating the Insured Account."
-      });
-    });
-});
-
-
-
-//////////////////////////////////////////////////////////////////////
-//User related endpoints that are not part of MVP
-// Get all users
+/**********************************User related endpoints ***************************************///User related endpoints that are not part of MVP
+/**
+ * Returns all of the users
+*/ 
 app.get('/api/user', function (req, res) {
   const firstName = req.query.firstName;
   var condition = firstName ? { firstName: { [Op.iLike]: `%${firstName}%` } } : null;
@@ -310,7 +270,10 @@ app.get('/api/user', function (req, res) {
       });
     });
 });
-// Get user with id
+
+/**
+ * Returns the user that matches with the primary key
+*/ 
 app.get('/api/user/:id', function (req, res) {
   const pid = req.params.id;
   console.log("pid " + pid);
@@ -331,41 +294,8 @@ app.get('/api/user/:id', function (req, res) {
     });
 });
 
-// Get user with id
-app.get('/api/uwusers', function (req, res) {
-  usersOfApp.findAll({
-    where: {
-      roleName: { [Op.eq]: 'Underwriter' },
-    }
-  }).then(data => {
-    res.json(data);
-  })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving users."
-      });
-    });
-});
-
-app.get('/api/uwausers', function (req, res) {
-  usersOfApp.findAll({
-    where: {
-      roleName: { [Op.eq]: 'UWAssitant' },
-    }
-  }).then(data => {
-    res.json(data);
-  })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving users."
-      });
-    });
-});
-
-
 app.post('/api/user', function (req, res) {
+  console.log("in ",req.body.firstName);
   if (!req.body.firstName) {
     res.status(400).send({
       message: "Some required fields are missing in the data, please verify"
@@ -377,320 +307,22 @@ app.post('/api/user', function (req, res) {
   const usr = {
     userName: req.body.userName,
     firstName: req.body.firstName,
-    lastName: req.body.lastName
+    lastName: req.body.lastName,
+    password: req.body.password,
+    roleName: req.body.roleName,
   };
+  console.log("creating user");
   // Save user in the database
   usersOfApp.create(usr)
     .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
+      res.json(data);
+    }).catch(err => {
       res.status(500).send({
         message:
           err.message || "Some error occurred while creating the user."
       });
     });
 });
-
-
-/**
-usersOfApp.findOne({
-  where: {
-    userName: { [Op.eq]: req.body.login },
-    password: { [Op.eq]: req.body.password },
-  }
-}).then(data => {
-  res.send(data);
-}).catch(err => {
-  res.status(500).send({
-    message:
-      err.message || "Some error occurred while verifying login."
-  });
-});
-
-**/
-
-/** 
-// Get all users
-app.get('/api/uws', function (request, response) {
-var role = "Underwriter"
-client.query('SELECT u."firstName", u."lastName", u."userName" from public."Users" u,' 
-            + 'public."UserRoles" ur, public."Roles" r where u."id" = ur."UserID" and r."id" = ur."RoleID" and r."RoleName" = $1', [role] ,
-function (err, result) {
-  if (err) {
-      console.log(err);
-      response.status(400).send(err);
-  }
-  response.send(result.rows);
-});
-});
-
-// Get all users
-app.get('/api/uwasst', function (request, response) {
-var role = "UWAssistant"
-client.query('SELECT u."firstName", u."lastName", u."userName" from public."Users" u,' 
-            + 'public."UserRoles" ur, public."Roles" r where u."id" = ur."UserID" and r."id" = ur."RoleID" and r."RoleName" = $1', [role] ,
-function (err, result) {
-  if (err) {
-      console.log(err);
-      response.status(400).send(err);
-  }
-  response.send(result.rows);
-});
-});
-
-
-
-
-
-
-
-//not working
-app.post('/api/userRole', function (request, response) {
-var uname = request.body.uname;
-
-console.log(uname);
-client.query('SELECT r."RoleName" FROM "UserRoles" ur , "Roles" r, "Users" u WHERE ur."RoleID" = r.ID and u."id" = ur."UserID" and u."userName"  = $1', [uname], 
-function (err, result) {
-  if (err) {
-      console.log(err);
-      response.status(400).send(err);
-  }
-  response.status(200).send(result.rows);
-});
-});
-
-
-
-
-// Get all users
-app.get('/auth/user', function (request, response) {
-usersOfApp.findOne({where: {
-  userName: request.body.userName}
-})
-.then(data => {
-    response.send(data);
-})
-.catch(err => {
-    response.status(500).send({
-    message:
-      err.message || "Some error occurred while retrieving users."
-  });
-});
-});
-
-// Get all users
-app.get('/auth/user', function (request, response) {
-
-userRoles.findOne({
-  include: [
-    roles.findOne({where: {
-      RoleName: request.body.userName}
-    }),
-  ],
-});
-
-
-usersOfApp.findOne({where: {
-  userName: request.body.userName}
-})
-.then(data => {
-    response.send(data);
-})
-.catch(err => {
-    response.status(500).send({
-    message:
-      err.message || "Some error occurred while retrieving users."
-  });
-});
-});
-
-// Get all users
-app.get('/api/roles', function (request, response) {
-roles.findOne({where: {
-  RoleName: "Underwriter"}
-})
-.then(data => {
-    response.send(data);
-})
-.catch(err => {
-    response.status(500).send({
-    message:
-      err.message || "Some error occurred while retrieving users."
-  });
-});
-});
-
-app.post('/api/UWassociation', function (request, response) {
-roles.findOne({where: {
-  RoleName: "Underwriter"}
-})
-.then(data => {
-    response.send(data);
-})
-.catch(err => {
-    response.status(500).send({
-    message:
-      err.message || "Some error occurred while retrieving users."
-  });
-});
-});
-
-
-
-
-
-
-
-
-
-
-
-app.post('/auth/login', function (request, response) {
-usersOfApp.findAll()
-.then(data => {
-    response.send(data);
-})
-.catch(err => {
-    response.status(500).send({
-    message:
-      err.message || "Some error occurred while retrieving users."
-  });
-});
-});
-
-
-app.post('/register', async (req, res) => {
-
-// hash the password provided by the user with bcrypt so that
-// we are never storing plain text passwords. This is crucial
-// for keeping your db clean of sensitive data
-const hash = bcrypt.hashSync(req.body.password, 10);
-
-try {
-  // create a new user with the password hash from bcrypt
-  let user = await User.create(
-    Object.assign(req.body, { password: hash })
-  );
-
-  // data will be an object with the user and it's authToken
- // let data = await user.authorize();
- const authToken = await async function(UserId) {
-  if (!UserId) {
-    throw new Error('AuthToken requires a user ID')
-  }
-
-  let token = '';
-
-  const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-    'abcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (var i = 0; i < 15; i++) {
-    token += possibleCharacters.charAt(
-      Math.floor(Math.random() * possibleCharacters.length)
-    );
-  }
-
-  return AuthToken.create({ token, UserId })
-}
-
-  // send back the new user and auth token to the
-  // client { user, authToken }
-  return res.json({ user, authToken });
-
-} catch(err) {
-  return res.status(400).send(err);
-}
-
-});
-
-
-app.post('/login', async (req, res) => {
-const { username, password } = req.body;
-
-// if the username / password is missing, we use status code 400
-// indicating a bad request was made and send back a message
-if (!username || !password) {
-  return res.status(400).send(
-    'Request missing username or password param'
-  );
-}
-
-try {
-  let user = await User.authenticate(username, password)
-
-  user = await user.authorize();
-
-  return res.json(user);
-
-} catch (err) {
-  return res.status(400).send('invalid username or password');
-}
-
-});
-
-
-app.delete('/logout', async (req, res) => {
-
-// because the logout request needs to be send with
-// authorization we should have access to the user
-// on the req object, so we will try to find it and
-// call the model method logout
-const { user, cookies: { auth_token: authToken } } = req
-
-// we only want to attempt a logout if the user is
-// present in the req object, meaning it already
-// passed the authentication middleware. There is no reason
-// the authToken should be missing at this point, check anyway
-if (user && authToken) {
-  await req.user.logout(authToken);
-  return res.status(204).send()
-}
-
-// if the user missing, the user is not logged in, hence we
-// use status code 400 indicating a bad request was made
-// and send back a message
-return res.status(400).send(
-  { errors: [{ message: 'not authenticated' }] }
-);
-});
-
-//Insured Account related endpoints
-// Get all Insured Accounts
-app.get('/api/insuredwithname/:name', function (req, res) {
-
-
-  insuredAcct.findAll({
-    where: {
-      firstName: { [Op.eq]: req.params.name },
-    }
-  })
-    .then(data => {
-      res.json(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "An error occurred while retrieving accounts."
-      });
-    });
-});
-
-/**
-// Get all users
-app.get('/api/users', function (request, response) {
-  usersOfApp.findAll()
-  .then(data => {
-      response.send(data);
-  })
-  .catch(err => {
-      response.status(500).send({
-      message:
-        err.message || "Some error occurred while retrieving users."
-    });
-  });
-});
-*/
 
 // Start app and listen on port 8080  
 app.listen(process.env.PORT || 8080);
